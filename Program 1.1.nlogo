@@ -5,13 +5,18 @@ globals
 
 breed [workers worker] ;; workers that build
 breed [resources resource] ;; resources that workers can find
+breed [splats splat] ;; splats
 
-workers-own[load jumpHeight]
+workers-own[load jumpHeight jumping? fallheight]
 ;; configs can be changed under spawnWorkers
 ; load - load carried by worker
+; jumping? - is it in the act of a jump?
 ; jumpHeight - height workers can jump
+; fallheight - how far has fallen
 resources-own[carried?]
 ; being carried?
+splats-own[life]
+; how many more ticks to survive
 
 
 to setup
@@ -20,10 +25,13 @@ to setup
   
   set-default-shape workers "wolf"
   set-default-shape resources "square"
+  set-default-shape splats "circle"
   
-  ask patches [ set pcolor green ]
+  ask patches [ set pcolor blue ]
   
   spawnWorkers startingWorkers 0 0
+  
+  ask patches with [pycor = min-pycor] [ set pcolor brown ]
   
 end
 
@@ -31,7 +39,9 @@ end
 to go
   ask workers [ workersGo ]
   ask resources [ resourcesGo ]
+  ask splats [ splatsGo ]
   
+  ask worker 0 [ print fallheight ]
   
 end
 
@@ -42,11 +52,24 @@ to spawnWorkers [ n x y ]
     set size 2
     set heading 0
     set jumpHeight 3
+    set jumping? false
+    set fallheight 0
   ]
 end
 
 to workersGo
-  
+  ;; fall if above ground and  not jumping
+  set heading 180
+  ;; get if above ground
+  ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
+    fd 1
+    set fallheight fallheight + 1
+    ;; explode if fall to far
+    if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ makeSplat ]
+  ]
+  [
+    set fallheight 0 
+  ]
   
 end
 
@@ -55,11 +78,33 @@ to spawnResources [ n x y ]
   create-resources n [
     set color brown
     set carried? false
+    set size 1
   ]
 end
 
 to resourcesGo
   
+end
+
+to splatsGo
+  if life <= size [ set size life ]
+  
+  set life life - 1
+  
+  if life <= 0 [ die ]
+end
+
+
+to makeSplat
+  ask patch-here
+  [
+    sprout-splats 1
+    [
+      set size 4
+      set life 20
+      set color red
+    ] 
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
