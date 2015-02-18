@@ -53,7 +53,8 @@ end
 
 to spawnResources [ n x y ]
   create-resources n [
-    set color brown 
+    set color brown
+    set carried? false
   ]
 end
 
