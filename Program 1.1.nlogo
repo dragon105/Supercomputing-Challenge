@@ -1,6 +1,6 @@
 globals
 [
-  
+  terrainBaseDepth
 ]
 
 breed [workers worker] ;; workers that build
@@ -29,9 +29,19 @@ to setup
   
   ask patches [ set pcolor blue ]
   
-  spawnWorkers startingWorkers 0 0
+  spawnWorkers startingWorkers random-xcor 35
   
-  ask patches with [pycor = min-pycor] [ set pcolor brown ]
+  ;; terrain gen
+  set terrainBaseDepth 20
+  ask patches with [pycor <= terrainBaseDepth] [ set pcolor brown ]
+  ask patches with [pycor = terrainBaseDepth + 1]
+  [
+    if (random 100) < 30
+     [
+       set pcolor brown
+       ask patches in-radius random 5 [set pcolor brown]
+     ]
+  ]
   
 end
 
@@ -40,8 +50,6 @@ to go
   ask workers [ workersGo ]
   ask resources [ resourcesGo ]
   ask splats [ splatsGo ]
-  
-  ask worker 0 [ print fallheight ]
   
 end
 
@@ -54,6 +62,7 @@ to spawnWorkers [ n x y ]
     set jumpHeight 3
     set jumping? false
     set fallheight 0
+    setxy x y
   ]
 end
 
@@ -74,15 +83,18 @@ to workersGo
 end
 
 
-to spawnResources [ n x y ]
-  create-resources n [
+to spawnResource [ x y ]
+  create-resources 1 [
     set color brown
     set carried? false
     set size 1
+    set heading 180
   ]
 end
 
 to resourcesGo
+  ;; fall
+  if not carried? and [pcolor] of patch-ahead 1 = green [ fd 1 ]
   
 end
 
@@ -105,15 +117,16 @@ to makeSplat
       set color red
     ] 
   ]
+  die
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
 1225
-346
+546
 100
-30
+-1
 5.0
 1
 10
@@ -126,8 +139,8 @@ GRAPHICS-WINDOW
 1
 -100
 100
--30
-30
+0
+100
 1
 1
 1
