@@ -71,21 +71,32 @@ to spawnWorkers [ n x y ]
 end
 
 to workersGo
+  
   fall
+  ifelse not baseLocationChosen?
+  [ ;; pick pase location
+    
+  ]
+  [ ;; construct base
+    
+  ]
 end
 
 to fall
-  ;; fall if above ground and  not jumping
-  set heading 180
-  ;; get if above ground
-  ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
-    fd 1
-    set fallheight fallheight + 1
-    ;; explode if fall to far
-    if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ makeSplat ]
-  ]
+  if not jumping?
   [
-    set fallheight 0 
+    ;; fall if above ground and  not jumping
+    set heading 180
+    ;; get if above ground
+    ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
+      fd 1
+      set fallheight fallheight + 1
+      ;; explode if fall to far
+      if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ makeSplat ]
+    ]
+    [
+      set fallheight 0 
+    ]
   ]
 end
 
@@ -128,7 +139,7 @@ end
 
 ;; jump
 to hop
-  
+  set jumping? true
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -204,9 +215,11 @@ NIL
 1
 
 @#$#@#$#@
-## WHAT IS IT?
+## Proposal
 
-(a general understanding of what the model is trying to show or explain)
+Most construction efforts, throughout history, are created with a group of people that have to work together, each adding their own skills to the project. However, social insects are able to create much more massive structures in much shorter amounts of time. 
+
+With humans attempting to create structures in increasingly hostile environments for the future, the obvious solution is to use machines. However, these machines are currently much less efficient at creating these structures, and are nowhere near as advanced as even simple insects can manage.
 
 ## HOW IT WORKS
 
@@ -228,17 +241,46 @@ NIL
 
 (suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
 
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+-Termites from model library
+-Ants from model library
+-
 
-## CREDITS AND REFERENCES
+## Works Cited
+ Grushin, A., Reggia, J.A.: Automated design of distributed control rules for the self-assembly of prespecified artificial structures. Robotics and Autonomous Systems 56(4), 334–359 (2008)
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Klavins, E., Ghrist, R., Lipsky, D.: A grammatical approach to self-organizing robotic systems. IEEE Transactions on Automatic Control 51(6), 949–962 (2006)
+
+Lindsey, Q., Mellinger, D., Kumar, V.: Construction of cubic structures with quadrotor teams. In: Proceedings of Robotics: Science and Systems. Los Angeles, CA, USA (2011)
+
+Pambaguian, Laurent. "Building a Lunar Base with 3D Printing." ESA. European Space Agency. 31 Jan 2013. Web. 9 Aug 2014.
+
+Werfel, Justin. “Collective Construction with Robot Swarms.” Havard. Harvard University. N.D. Web. 8 Dec 2014.
+
+## Mentors
+
+Elizabeth Kallman
+Allen Arsenault
+
+## Teacher
+
+Michael Steele
+
+## Team Members
+
+Xavier Rivera
+Kyle Morris
+Jonathan Schlaegel
+Jenna Soherr
+
+## Team Number
+
+107 
+
+## School
+
+nex+Gen Academy
 @#$#@#$#@
 default
 true
