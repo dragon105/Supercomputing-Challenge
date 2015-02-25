@@ -3,6 +3,7 @@ globals
   terrainBaseDepth
   baseLocation
   baseLocationChosen?
+  maxJumpHeight
 ]
 
 breed [workers worker] ;; workers that build
@@ -26,7 +27,11 @@ to setup
   clear-all
   reset-ticks
   
-  set-default-shape workers "wolf"
+  ;; set globals
+  set terrainBaseDepth 20
+  set maxJumpHeight 3
+  
+  set-default-shape workers "superputingRobot"
   set-default-shape resources "square"
   set-default-shape splats "circle"
   
@@ -36,7 +41,6 @@ to setup
   ask worker 0 [ set color red ]
   
   ;; terrain gen
-  set terrainBaseDepth 20
   ask patches with [pycor <= terrainBaseDepth] [ set pcolor brown ]
   ask patches with [pycor = terrainBaseDepth + 1]
   [
@@ -60,10 +64,10 @@ end
 
 to spawnWorkers [ n x y ]
   create-workers n [
-    set color orange
-    set size 2
+    set color gray
+    set size 3.5
     set heading 0
-    set jumpHeight 3
+    set jumpHeight 0
     set jumping? false
     set fallheight 0
     setxy x y
@@ -71,31 +75,41 @@ to spawnWorkers [ n x y ]
 end
 
 to workersGo
-  
+  set heading 180
   fall
-  ifelse not baseLocationChosen?
-  [ ;; pick pase location
-    
-  ]
+  ifelse  baseLocationChosen? = True
   [ ;; construct base
     
+  ]
+  [ ;; pick pase location
+    if color = red
+    [
+
+    ]
   ]
 end
 
 to fall
-  if not jumping?
+  ifelse not jumping?
   [
     ;; fall if above ground and  not jumping
-    set heading 180
     ;; get if above ground
     ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
       fd 1
       set fallheight fallheight + 1
       ;; explode if fall to far
-      if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ makeSplat ]
+      if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ explode ]
     ]
     [
       set fallheight 0 
+    ]
+  ]
+  [ ;; update jump
+    bk 1
+    set jumpHeight jumpHeight + 1
+    if jumpHeight >= maxJumpHeight [
+      set jumping? false
+      set jumpHeight 0
     ]
   ]
 end
@@ -116,30 +130,39 @@ to resourcesGo
 end
 
 to splatsGo
-  if life <= size [ set size life ]
-  
+  set size life
   set life life - 1
-  
-  if life <= 0 [ die ]
+  if life < 0 [ die ]
 end
 
 
-to makeSplat
+to explode
   ask patch-here
   [
     sprout-splats 1
     [
-      set size 4
-      set life 20
-      set color red
+      set life 10
+      set color orange
     ] 
   ]
   die
 end
 
-;; jump
+;; movement related procedures for workers
 to hop
-  set jumping? true
+  if [pcolor] of patch-ahead 1 = brown [ set jumping? true ]
+end
+
+to goFwd
+  set heading 90
+  if [pcolor] of patch-ahead 1 = blue [ fd 1]
+  set heading 180
+end
+
+to goBck
+  set heading 90
+  if [pcolor] of patch-ahead -1 = blue [ bk 1]
+  set heading 180
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -204,12 +227,46 @@ BUTTON
 138
 go
 go
-NIL
+T
 1
 T
 OBSERVER
 NIL
 2
+NIL
+NIL
+1
+
+BUTTON
+80
+211
+155
+244
+testHop
+ask workers [ hop ]
+NIL
+1
+T
+OBSERVER
+NIL
+3
+NIL
+NIL
+1
+
+BUTTON
+91
+170
+166
+203
+test run
+ask workers [ gofwd ]
+T
+1
+T
+OBSERVER
+NIL
+4
 NIL
 NIL
 1
@@ -496,6 +553,20 @@ star
 false
 0
 Polygon -7500403 true true 151 1 185 108 298 108 207 175 242 282 151 216 59 282 94 175 3 108 116 108
+
+superputingrobot
+false
+0
+Rectangle -7500403 true true 45 240 120 240
+Rectangle -7500403 true true 60 105 240 180
+Polygon -7500403 true true 60 150 30 165 15 180 45 165 60 165 60 150
+Polygon -7500403 true true 240 150 270 165 285 180 255 165 240 165 240 150
+Polygon -7500403 true true 60 180 30 195 15 210 45 195 75 180
+Polygon -7500403 true true 240 180 270 195 285 210 225 180 240 180
+Polygon -7500403 true true 105 180 90 195 105 210 120 195 105 195 120 180
+Polygon -7500403 true true 180 180 195 195 180 195 195 210 210 195 195 180 180 180
+Circle -2674135 true false 105 120 30
+Circle -2674135 true false 165 120 30
 
 target
 false
