@@ -193,40 +193,38 @@ startingWorkers
 Number
 
 @#$#@#$#@
+# Leaderless Construction Systems
+
+School:
+nex+Gen Academy
+
+Team Number:
+107 
+
+Team Members:
+Xavier Rivera, Kyle Morris, Jonathan Schlaegel, Jenna Soherr
+
+Teacher:
+Michael Steele
+
+Mentors:
+Elizabeth Kallman, Allen Arsenault
+
 ## Proposal
 
 Most construction efforts, throughout history, are created with a group of people that have to work together, each adding their own skills to the project. However, social insects are able to create much more massive structures in much shorter amounts of time. 
 
 With humans attempting to create structures in increasingly hostile environments for the future, the obvious solution is to use machines. However, these machines are currently much less efficient at creating these structures, and are nowhere near as advanced as even simple insects can manage.
 
-## HOW IT WORKS
-
-(what rules the agents use to create the overall behavior of the model)
-
-## HOW TO USE IT
-
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
 ## RELATED MODELS
 
--Termites from model library
--Ants from model library
--
+- Termites from model library
+- Ants from model library
+- 
 
 ## Works Cited
- Grushin, A., Reggia, J.A.: Automated design of distributed control rules for the self-assembly of prespecified artificial structures. Robotics and Autonomous Systems 56(4), 334–359 (2008)
+
+Grushin, A., Reggia, J.A.: Automated design of distributed control rules for the self-assembly of prespecified artificial structures. Robotics and Autonomous Systems 56(4), 334–359 (2008)
 
 Klavins, E., Ghrist, R., Lipsky, D.: A grammatical approach to self-organizing robotic systems. IEEE Transactions on Automatic Control 51(6), 949–962 (2006)
 
@@ -235,30 +233,6 @@ Lindsey, Q., Mellinger, D., Kumar, V.: Construction of cubic structures with qua
 Pambaguian, Laurent. "Building a Lunar Base with 3D Printing." ESA. European Space Agency. 31 Jan 2013. Web. 9 Aug 2014.
 
 Werfel, Justin. “Collective Construction with Robot Swarms.” Havard. Harvard University. N.D. Web. 8 Dec 2014.
-
-## Mentors
-
-Elizabeth Kallman
-Allen Arsenault
-
-## Teacher
-
-Michael Steele
-
-## Team Members
-
-Xavier Rivera
-Kyle Morris
-Jonathan Schlaegel
-Jenna Soherr
-
-## Team Number
-
-107 
-
-## School
-
-nex+Gen Academy
 @#$#@#$#@
 default
 true
