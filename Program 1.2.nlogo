@@ -1,24 +1,27 @@
 globals
 [
-  terrainBaseDepth
   baseLocation
   baseLocationChosen?
-  maxJumpHeight
+  spawnLocation
 ]
 
 breed [workers worker] ;; workers that build
 breed [resources resource] ;; resources that workers can find
 breed [splats splat] ;; splats
 
-workers-own[load jumpHeight jumping? fallheight]
+workers-own[load jumpHeight jumping? fallheight terrainFlatLengthLocal terrainFlatLengthGlobal]
 ;; configs can be changed under spawnWorkers
 ; load - load carried by worker
 ; jumping? - is it in the act of a jump?
 ; jumpHeight - height workers can jump
 ; fallheight - how far has fallen
+; terrainFlatLengthLocal - length of current flat terrain
+; highest flat length of terrain so far.
+
 
 resources-own[carried?]
 ; being carried?
+
 splats-own[life]
 ; how many more ticks to survive
 
@@ -27,27 +30,24 @@ to setup
   clear-all
   reset-ticks
   
-  ;; set globals
-  set terrainBaseDepth 20
-  set maxJumpHeight 3
-  
   set-default-shape workers "superputingRobot"
   set-default-shape resources "square"
   set-default-shape splats "circle"
   
   ask patches [ set pcolor blue ]
   
-  spawnWorkers startingWorkers random-xcor 35
+  set spawnLocation random-xcor
+  spawnWorkers startingWorkers spawnLocation 35
   ask worker 0 [ set color red ]
   
   ;; terrain gen
   ask patches with [pycor <= terrainBaseDepth] [ set pcolor brown ]
-  ask patches with [pycor = terrainBaseDepth + 1]
+  ask patches with [pycor = terrainBaseDepth ]
   [
-    if (random 100) < 30
+    if (random 100) < 20
      [
        set pcolor brown
-       ask patches in-radius random 5 [set pcolor brown]
+       ask patches in-radius random 7 [set pcolor brown]
      ]
   ]
   
@@ -64,9 +64,9 @@ end
 
 to spawnWorkers [ n x y ]
   create-workers n [
+    set heading 180
     set color gray
     set size 3.5
-    set heading 0
     set jumpHeight 0
     set jumping? false
     set fallheight 0
@@ -75,7 +75,6 @@ to spawnWorkers [ n x y ]
 end
 
 to workersGo
-  set heading 180
   fall
   ifelse  baseLocationChosen? = True
   [ ;; construct base
@@ -84,15 +83,49 @@ to workersGo
   [ ;; pick pase location
     if color = red
     [
-
+      ;; if  on flat land, increment terrainFlatLength
+      set terrainFlatLengthLocal terrainFlatLengthLocal + 1      
+      
+      ;; go forward and jump over obstacles
+      ; make sure to map every patch: only go forward if on ground or jumping onto ground
+      if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
+      if [pcolor] of patch (xcor + 1) ycor = brown [
+        hop
+        ;; reset local flat terrain counter and store previous max in global and store location
+        if terrainFlatLengthLocal > terrainFlatLengthGlobal [ set terrainFlatLengthGlobal terrainFlatLengthLocal ]
+        set baseLocation round (xcor - terrainFlatLengthGlobal)
+        set terrainFlatLengthLocal 0
+      ]
+      ;; set base location once entire terrain has ben mapped.
+      if xcor = spawnLocation - 1
+      [
+        set baseLocationChosen? true
+        print "Base location chosen: "
+        print baseLocation
+        
+        ask patches with [pxcor = baseLocation and pcolor = brown]
+        [
+          ask patches with [pxcor = [pxcor] of myself]
+          [
+            if pcolor = blue
+            [
+            ask patches with [pxcor = [pxcor] of myself and pycor = [pycor] of myself - 1]
+              [
+              set pcolor red 
+              ] 
+            ]
+          ]
+        ]
+      ]
+      
     ]
   ]
 end
 
 to fall
+  ;; fall if above ground and  not jumping
   ifelse not jumping?
   [
-    ;; fall if above ground and  not jumping
     ;; get if above ground
     ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
       fd 1
@@ -150,19 +183,18 @@ end
 
 ;; movement related procedures for workers
 to hop
-  if [pcolor] of patch-ahead 1 = brown [ set jumping? true ]
+  if [pcolor] of patch-ahead 1 = brown [
+    set jumping? true
+    set fallHeight 0
+  ]
 end
 
 to goFwd
-  set heading 90
-  if [pcolor] of patch-ahead 1 = blue [ fd 1]
-  set heading 180
+  if [pcolor] of patch (xcor + 1) ycor = blue [ setxy (xcor + 1) ycor ]
 end
 
 to goBck
-  set heading 90
-  if [pcolor] of patch-ahead -1 = blue [ bk 1]
-  set heading 180
+  if [pcolor] of patch (xcor - 1) ycor = blue [ setxy (xcor - 1) ycor ] 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -238,9 +270,9 @@ NIL
 1
 
 BUTTON
-80
+13
 211
-155
+88
 244
 testHop
 ask workers [ hop ]
@@ -255,10 +287,10 @@ NIL
 1
 
 BUTTON
-91
-170
-166
-203
+13
+177
+88
+210
 test run
 ask workers [ gofwd ]
 T
@@ -270,6 +302,28 @@ NIL
 NIL
 NIL
 1
+
+INPUTBOX
+13
+245
+168
+305
+terrainBaseDepth
+30
+1
+0
+Number
+
+INPUTBOX
+13
+306
+168
+366
+maxJumpHeight
+3
+1
+0
+Number
 
 @#$#@#$#@
 ## Team Members
