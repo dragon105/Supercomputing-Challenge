@@ -3,13 +3,15 @@ globals
   baseLocation
   baseLocationChosen?
   spawnLocation
+  terrainFlatLengthLocal
+  terrainFlatLengthGlobal
 ]
 
 breed [workers worker] ;; workers that build
 breed [resources resource] ;; resources that workers can find
 breed [splats splat] ;; splats
 
-workers-own[load jumpHeight jumping? fallheight terrainFlatLengthLocal terrainFlatLengthGlobal]
+workers-own[load jumpHeight jumping? fallheight]
 ;; configs can be changed under spawnWorkers
 ; load - load carried by worker
 ; jumping? - is it in the act of a jump?
@@ -36,7 +38,7 @@ to setup
   
   ask patches [ set pcolor blue ]
   
-  set spawnLocation random-xcor
+  set spawnLocation round(random-xcor)
   spawnWorkers startingWorkers spawnLocation 35
   ask worker 0 [ set color red ]
   
@@ -91,9 +93,13 @@ to workersGo
       if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
       if [pcolor] of patch (xcor + 1) ycor = brown [
         hop
-        ;; reset local flat terrain counter and store previous max in global and store location
-        if terrainFlatLengthLocal > terrainFlatLengthGlobal [ set terrainFlatLengthGlobal terrainFlatLengthLocal ]
-        set baseLocation round (xcor - terrainFlatLengthGlobal)
+        ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
+        if terrainFlatLengthLocal > terrainFlatLengthGlobal
+        [
+          set terrainFlatLengthGlobal terrainFlatLengthLocal
+          set baseLocation (xcor - terrainFlatLengthGlobal)
+        ]
+        ; since terrain is no longer flat, reset counter for length of local flat.
         set terrainFlatLengthLocal 0
       ]
       ;; set base location once entire terrain has ben mapped.
@@ -103,19 +109,8 @@ to workersGo
         print "Base location chosen: "
         print baseLocation
         
-        ask patches with [pxcor = baseLocation and pcolor = brown]
-        [
-          ask patches with [pxcor = [pxcor] of myself]
-          [
-            if pcolor = blue
-            [
-            ask patches with [pxcor = [pxcor] of myself and pycor = [pycor] of myself - 1]
-              [
-              set pcolor red 
-              ] 
-            ]
-          ]
-        ]
+        ;DEBUG
+        ask patches with [pxcor = baseLocation] [ set pcolor green ]
       ]
       
     ]
