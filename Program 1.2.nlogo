@@ -39,17 +39,17 @@ to setup
   ask patches [ set pcolor blue ]
   
   set spawnLocation round(random-xcor)
-  spawnWorkers startingWorkers spawnLocation 35
+  spawnWorkers startingWorkers spawnLocation spawnHeight
   ask worker 0 [ set color red ]
   
   ;; terrain gen
   ask patches with [pycor <= terrainBaseDepth] [ set pcolor brown ]
   ask patches with [pycor = terrainBaseDepth ]
   [
-    if (random 100) < 20
+    if (random 100) < percentHills
      [
        set pcolor brown
-       ask patches in-radius random 7 [set pcolor brown]
+       ask patches in-radius random maxHillheight [set pcolor brown]
      ]
   ]
   
@@ -79,8 +79,31 @@ end
 to workersGo
   fall
   ifelse  baseLocationChosen? = True
-  [ ;; construct base
-    
+  [
+    ;; if base location is unmarked, have turtle 0 mark it before construction
+    ifelse any? patches with [pcolor = red]
+    [ ;; construct base
+      
+    ]
+    [
+      ;; mark base
+      if color = red
+      [
+        ifelse any? patches with [pcolor = yellow]
+        [ ;; mark ACTUAL baseLocation red
+           goBck
+           if [pcolor] of patch (xcor - 1) ycor = brown [
+             ask patch-ahead 1 [ set pcolor red ]
+             ask patches with [pcolor = yellow] [ set pcolor brown ]
+           ]
+        ]
+        [ ;; mark recorded baseLocation yellow
+          goFwd
+          if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
+          if xcor = baseLocation [ ask patch-ahead 1 [ set pcolor yellow ] ]
+        ]
+      ]
+    ]
   ]
   [ ;; pick pase location
     if color = red
@@ -93,26 +116,18 @@ to workersGo
       if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
       if [pcolor] of patch (xcor + 1) ycor = brown [
         hop
+        
         ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
         if terrainFlatLengthLocal > terrainFlatLengthGlobal
         [
           set terrainFlatLengthGlobal terrainFlatLengthLocal
-          set baseLocation (xcor - terrainFlatLengthGlobal)
+          set baseLocation (xcor)
         ]
         ; since terrain is no longer flat, reset counter for length of local flat.
         set terrainFlatLengthLocal 0
       ]
       ;; set base location once entire terrain has ben mapped.
-      if xcor = spawnLocation - 1
-      [
-        set baseLocationChosen? true
-        print "Base location chosen: "
-        print baseLocation
-        
-        ;DEBUG
-        ask patches with [pxcor = baseLocation] [ set pcolor green ]
-      ]
-      
+      if xcor = spawnLocation - 1 [ set baseLocationChosen? true ]
     ]
   ]
 end
@@ -315,7 +330,40 @@ INPUTBOX
 168
 366
 maxJumpHeight
-3
+4
+1
+0
+Number
+
+INPUTBOX
+13
+367
+168
+427
+spawnHeight
+50
+1
+0
+Number
+
+INPUTBOX
+13
+428
+168
+488
+percentHills
+10
+1
+0
+Number
+
+INPUTBOX
+13
+489
+168
+549
+maxHillHeight
+10
 1
 0
 Number
