@@ -63,9 +63,9 @@ Klavins, E., Ghrist, R., Lipsky, D.: A grammatical approach to self-organizing r
 
 Lindsey, Q., Mellinger, D., Kumar, V.: Construction of cubic structures with quadrotor teams. In: Proceedings of Robotics: Science and Systems. Los Angeles, CA, USA (2011)
 
-Pambaguian, Laurent. "Building a Lunar Base with 3D Printing." _ESA. European Space Agency. 31 Jan 2013. Web. 9 Aug 2014.
+Pambaguian, Laurent. "Building a Lunar Base with 3D Printing." _ESA. European Space Agency_, 31 Jan 2013. Web. 9 Aug 2014.
 
-Werfel, Justin. “Collective Construction with Robot Swarms.” Havard. Harvard University. N.D. Web. 8 Dec 2014.
+Werfel, Justin. “Collective Construction with Robot Swarms.” _Havard_. Harvard University. N.D. Web. 8 Dec 2014.
 
 
 [Final Report](https://docs.google.com/a/nexgenacademy.com/document/d/1hHfTuD1nR7S0OinGj4-rdr-_gDwMfrXUXpDN66jUrbY/edit#heading=h.1u6ln81ibo1w)
