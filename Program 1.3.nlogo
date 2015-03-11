@@ -1,28 +1,29 @@
+;; worker color codes:
+; gray - default
+; red - carrying marker
+; lime - carrying resources
+
+
 globals
 [
   baseLocation
+  baseHeight
   baseLocationChosen?
   spawnLocation
   terrainFlatLengthLocal
   terrainFlatLengthGlobal
+  baseWidth
 ]
 
 breed [workers worker] ;; workers that build
-breed [resources resource] ;; resources that workers can find
 breed [splats splat] ;; splats
 
-workers-own[load jumpHeight jumping? fallheight]
+workers-own[jumpHeight jumping? fallheight beenToBase?]
 ;; configs can be changed under spawnWorkers
-; load - load carried by worker
 ; jumping? - is it in the act of a jump?
 ; jumpHeight - height workers can jump
 ; fallheight - how far has fallen
-; terrainFlatLengthLocal - length of current flat terrain
-; highest flat length of terrain so far.
-
-
-resources-own[carried?]
-; being carried?
+; beenToBase? - has turtle been to base yet? (important for construction)
 
 splats-own[life]
 ; how many more ticks to survive
@@ -33,7 +34,6 @@ to setup
   reset-ticks
   
   set-default-shape workers "superputingRobot"
-  set-default-shape resources "square"
   set-default-shape splats "circle"
   
   ask patches [ set pcolor blue ]
@@ -58,7 +58,6 @@ end
 
 to go
   ask workers [ workersGo ]
-  ask resources [ resourcesGo ]
   ask splats [ splatsGo ]
   tick
 end
@@ -82,22 +81,46 @@ to workersGo
   [
     ;; if base location is unmarked, have turtle 0 mark it before construction
     ifelse any? patches with [pcolor = red]
-    [ ;; construct base
-      
+    [ ;;;; construct base
+      ifelse beenToBase? = true
+      [
+        ifelse color = gray
+        [ ;;;; gather resources if not carrying any
+          
+          ;; make sure to leave terrain in a shape that is navigatable
+          if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
+          ; take resources if it meets any of a set of conditions
+          let target patch (xcor + 1) (ycor + 10)
+          if [pcolor] of target = brown [ grab target ]
+          
+        
+        ]
+        [ ;;;; build resources into base
+          
+        ]
+      ]
+      [ ;;;; start from base location
+        goFwd
+        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
+        if xcor = baseLocation [ set beenToBase? true ]
+      ]
     ]
     [
-      ;; mark base
+      ;; mark base for construction if unmarked
       if color = red
       [
         ifelse any? patches with [pcolor = yellow]
         [ ;; mark ACTUAL baseLocation red
            goBck
+           set baseWidth baseWidth + 1
            if [pcolor] of patch (xcor - 1) ycor = brown [
-             ask patch-ahead 1 [ set pcolor red ]
+             ask patch-ahead 1 [ set pcolor red ] ; mark
              ask patches with [pcolor = yellow] [ set pcolor brown ]
+             set baseHeight ycor
+             set color gray
            ]
         ]
-        [ ;; mark recorded baseLocation yellow
+        [ ;; mark original recorded baseLocation yellow
           goFwd
           if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
           if xcor = baseLocation [ ask patch-ahead 1 [ set pcolor yellow ] ]
@@ -105,7 +128,7 @@ to workersGo
       ]
     ]
   ]
-  [ ;; pick pase location
+  [ ;;;; pick base location
     if color = red
     [
       ;; if  on flat land, increment terrainFlatLength
@@ -157,41 +180,13 @@ to fall
   ]
 end
 
-to spawnResource [ x y ]
-  create-resources 1 [
-    set color brown
-    set carried? false
-    set size 1
-    set heading 180
-  ]
-end
-
-to resourcesGo
-  ;; fall
-  if not carried? and [pcolor] of patch-ahead 1 = green [ fd 1 ]
-  
-end
-
 to splatsGo
   set size life
   set life life - 1
   if life < 0 [ die ]
 end
 
-
-to explode
-  ask patch-here
-  [
-    sprout-splats 1
-    [
-      set life 10
-      set color orange
-    ] 
-  ]
-  die
-end
-
-;; movement related procedures for workers
+;; procedures for workers
 to hop
   if [pcolor] of patch-ahead 1 = brown [
     set jumping? true
@@ -205,6 +200,23 @@ end
 
 to goBck
   if [pcolor] of patch (xcor - 1) ycor = blue [ setxy (xcor - 1) ycor ] 
+end
+
+to explode
+  ask patch-here
+  [
+    sprout-splats 1
+    [
+      set life 10
+      set color orange
+    ] 
+  ]
+  die
+end
+
+to grab [ target ]
+  ask target [ set pcolor blue ]
+  set color lime
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
