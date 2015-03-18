@@ -18,12 +18,11 @@ globals
 breed [workers worker] ;; workers that build
 breed [splats splat] ;; splats
 
-workers-own[jumpHeight jumping? fallheight beenToBase?]
+workers-own[jumpHeight jumping? fallheight]
 ;; configs can be changed under spawnWorkers
 ; jumping? - is it in the act of a jump?
 ; jumpHeight - height workers can jump
 ; fallheight - how far has fallen
-; beenToBase? - has turtle been to base yet? (important for construction)
 
 splats-own[life]
 ; how many more ticks to survive
@@ -49,7 +48,7 @@ to setup
     if (random 100) < percentHills
      [
        set pcolor brown
-       ask patches in-radius random maxHillheight [set pcolor brown]
+       ask patches in-radius random maxHillSize [set pcolor brown]
      ]
   ]
   
@@ -57,8 +56,8 @@ end
 
 
 to go
-  ask workers [ workersGo ]
-  ask splats [ splatsGo ]
+  if workersGo? [ ask workers [ workersGo ] ]
+  if terrainPainting? [ if mouse-Down? [ ask patch mouse-xcor mouse-ycor [ ask patches in-radius terrainBrushSize [ if pcolor = blue [ set pcolor brown ] ] ] ] ]
   tick
 end
 
@@ -82,27 +81,30 @@ to workersGo
     ;; if base location is unmarked, have turtle 0 mark it before construction
     ifelse any? patches with [pcolor = red]
     [ ;;;; construct base
-      ifelse beenToBase? = true
-      [
-        ifelse color = gray
-        [ ;;;; gather resources if not carrying any
-          
-          ;; make sure to leave terrain in a shape that is navigatable
-          if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
-          ; take resources if it meets any of a set of conditions
-          let target patch (xcor + 1) (ycor + 10)
-          if [pcolor] of target = brown [ grab target ]
-          
-        
+      ifelse color = gray
+      [ ;;;; gather resources if not carrying any
+        if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown or [pcolor] of patch-ahead 1 = red or any? turtles-on patch-ahead 1 and [pcolor] of patch (xcor + 1) ycor = blue
+        [
+          goFwd
+          if jumping? [ set jumping? false ]
         ]
-        [ ;;;; build resources into base
-          
+        
+        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
+        ;; only take from tops of hills
+        if ycor > terrainBaseDepth + 1 and [pcolor] of patch-ahead 1 = brown
+        [
+          let i 0
+          let topOfhill? true
+          while [ [pcolor] of patch (xcor + i) (ycor - 1) = brown and i <= maxHillSize ]
+          [
+            if [pcolor] of patch (xcor + i) ycor = brown [ set topOfHill? false]
+            set i i + 1
+          ]
+          if topOfHill? [ grab patch-ahead 1 ]
         ]
       ]
-      [ ;;;; start from base location
-        goFwd
-        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
-        if xcor = baseLocation [ set beenToBase? true ]
+      [ ;;;; build resources into base
+        
       ]
     ]
     [
@@ -114,16 +116,26 @@ to workersGo
            goBck
            set baseWidth baseWidth + 1
            if [pcolor] of patch (xcor - 1) ycor = brown [
-             ask patch-ahead 1 [ set pcolor red ] ; mark
+             if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor red ] ] ; mark
              ask patches with [pcolor = yellow] [ set pcolor brown ]
              set baseHeight ycor
              set color gray
            ]
         ]
         [ ;; mark original recorded baseLocation yellow
-          goFwd
-          if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
-          if xcor = baseLocation [ ask patch-ahead 1 [ set pcolor yellow ] ]
+          ifelse xcor < baseLocation
+          [
+            goFwd
+            if [pcolor] of patch (xcor + 1) ycor = brown and xcor != baseLocation[ hop ]
+          ]
+          [
+            ifelse xcor > baseLocation
+            [
+              goBck
+              if [pcolor] of patch (xcor - 1) ycor = brown [ hop ]
+            ]
+            [ if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor yellow ] ] ]
+          ]
         ]
       ]
     ]
@@ -136,9 +148,18 @@ to workersGo
       
       ;; go forward and jump over obstacles
       ; make sure to map every patch: only go forward if on ground or jumping onto ground
-      if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown [ goFwd ]
-      if [pcolor] of patch (xcor + 1) ycor = brown [
-        hop
+      if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown and [pcolor] of patch (xcor + 1) ycor = blue[
+        goFwd
+        if jumping? [ set jumping? false ]
+      ]
+      ; map terrain underneath bots stacked underneath
+      if any? turtles-on patch-ahead 1 [
+        fd 1
+        ask turtles-on patch-ahead 1 [ bk 1 ]
+      ]
+      
+      if [pcolor] of patch (xcor + 1) ycor = brown or [pcolor] of patch-ahead 1 = blue[
+        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
         
         ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
         if terrainFlatLengthLocal > terrainFlatLengthGlobal
@@ -153,6 +174,8 @@ to workersGo
       if xcor = spawnLocation - 1 [ set baseLocationChosen? true ]
     ]
   ]
+  ;; bot collision
+  if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue] ] ]
 end
 
 to fall
@@ -160,15 +183,7 @@ to fall
   ifelse not jumping?
   [
     ;; get if above ground
-    ifelse [pcolor] of patch-ahead 1 = blue and not jumping? [
-      fd 1
-      set fallheight fallheight + 1
-      ;; explode if fall to far
-      if fallHeight >= 20 and [pcolor] of patch-ahead 1 = brown [ explode ]
-    ]
-    [
-      set fallheight 0 
-    ]
+    ifelse [pcolor] of patch-ahead 1 = blue and not any? turtles-on patch-ahead 1 and not jumping? [ fd 1 ] [ set fallheight 0 ]
   ]
   [ ;; update jump
     bk 1
@@ -178,12 +193,6 @@ to fall
       set jumpHeight 0
     ]
   ]
-end
-
-to splatsGo
-  set size life
-  set life life - 1
-  if life < 0 [ die ]
 end
 
 ;; procedures for workers
@@ -200,18 +209,6 @@ end
 
 to goBck
   if [pcolor] of patch (xcor - 1) ycor = blue [ setxy (xcor - 1) ycor ] 
-end
-
-to explode
-  ask patch-here
-  [
-    sprout-splats 1
-    [
-      set life 10
-      set color orange
-    ] 
-  ]
-  die
 end
 
 to grab [ target ]
@@ -247,10 +244,10 @@ ticks
 30.0
 
 BUTTON
-92
-71
-155
-104
+54
+18
+117
+51
 setup
 setup
 NIL
@@ -264,23 +261,23 @@ NIL
 1
 
 INPUTBOX
-92
-10
+54
+52
 209
-70
+112
 startingWorkers
-10
+25
 1
 0
 Number
 
 BUTTON
-92
-105
-155
-138
+118
+18
+181
+51
 go
-go
+go\n
 T
 1
 T
@@ -291,45 +288,11 @@ NIL
 NIL
 1
 
-BUTTON
-13
-211
-88
-244
-testHop
-ask workers [ hop ]
-NIL
-1
-T
-OBSERVER
-NIL
-3
-NIL
-NIL
-1
-
-BUTTON
-13
-177
-88
-210
-test run
-ask workers [ gofwd ]
-T
-1
-T
-OBSERVER
-NIL
-4
-NIL
-NIL
-1
-
 INPUTBOX
-13
-245
-168
-305
+54
+242
+209
+302
 terrainBaseDepth
 30
 1
@@ -337,45 +300,78 @@ terrainBaseDepth
 Number
 
 INPUTBOX
-13
-306
-168
-366
+54
+303
+209
+363
 maxJumpHeight
-4
+8
 1
 0
 Number
 
 INPUTBOX
-13
-367
-168
-427
+54
+364
+209
+424
 spawnHeight
-50
+70
 1
 0
 Number
 
 INPUTBOX
-13
-428
-168
-488
+54
+425
+209
+485
 percentHills
-10
+2
 1
 0
 Number
 
 INPUTBOX
-13
-489
-168
-549
-maxHillHeight
-10
+54
+486
+209
+546
+maxHillSize
+40
+1
+0
+Number
+
+SWITCH
+54
+147
+209
+180
+terrainPainting?
+terrainPainting?
+0
+1
+-1000
+
+SWITCH
+54
+113
+209
+146
+workersGo?
+workersGo?
+0
+1
+-1000
+
+INPUTBOX
+54
+181
+209
+241
+terrainBrushSize
+1
 1
 0
 Number
