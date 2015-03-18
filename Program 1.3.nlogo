@@ -266,7 +266,7 @@ INPUTBOX
 209
 112
 startingWorkers
-25
+500
 1
 0
 Number
@@ -305,7 +305,7 @@ INPUTBOX
 209
 363
 maxJumpHeight
-8
+2
 1
 0
 Number
@@ -316,7 +316,7 @@ INPUTBOX
 209
 424
 spawnHeight
-70
+100
 1
 0
 Number
@@ -327,7 +327,7 @@ INPUTBOX
 209
 485
 percentHills
-2
+10
 1
 0
 Number
@@ -338,7 +338,7 @@ INPUTBOX
 209
 546
 maxHillSize
-40
+65
 1
 0
 Number
