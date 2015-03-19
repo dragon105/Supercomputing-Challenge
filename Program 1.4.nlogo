@@ -165,7 +165,7 @@ to workersGo
         if terrainFlatLengthLocal > terrainFlatLengthGlobal
         [
           set terrainFlatLengthGlobal terrainFlatLengthLocal
-          set baseLocation (xcor)
+          ifelse [pcolor] of patch-ahead 1 = blue [ set baseLocation (xcor - 1) ] [ set baseLocation xcor ]
         ]
         ; since terrain is no longer flat, reset counter for length of local flat.
         set terrainFlatLengthLocal 0
@@ -183,7 +183,7 @@ to fall
   ifelse not jumping?
   [
     ;; get if above ground
-    ifelse [pcolor] of patch-ahead 1 = blue and not any? turtles-on patch-ahead 1 and not jumping? [ fd 1 ] [ set fallheight 0 ]
+    ifelse ([pcolor] of patch-ahead 1 = blue) and ((not any? turtles-on patch-ahead 1) or (color = red)) and (not jumping?) [ fd 1 ] [ set fallheight 0 ]
   ]
   [ ;; update jump
     bk 1
@@ -197,7 +197,7 @@ end
 
 ;; procedures for workers
 to hop
-  if [pcolor] of patch-ahead 1 = brown [
+  if [pcolor] of patch-ahead 1 = brown or any? turtles-on patch-ahead 1 [
     set jumping? true
     set fallHeight 0
   ]
@@ -277,7 +277,7 @@ BUTTON
 181
 51
 go
-go\n
+go\n;DEBUG\nask workers with [color = red]\n[\nprint xcor\nprint ycor\n]
 T
 1
 T
@@ -316,7 +316,7 @@ INPUTBOX
 209
 424
 spawnHeight
-70
+85
 1
 0
 Number
@@ -371,7 +371,7 @@ INPUTBOX
 209
 241
 terrainBrushSize
-1
+15
 1
 0
 Number
