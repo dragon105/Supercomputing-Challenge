@@ -186,9 +186,17 @@ to fall
     ifelse ([pcolor] of patch-ahead 1 = blue) and ((not any? turtles-on patch-ahead 1) or (color = red)) and (not jumping?) [ fd 1 ] [ set fallheight 0 ]
   ]
   [ ;; update jump
-    bk 1
-    set jumpHeight jumpHeight + 1
-    if jumpHeight >= maxJumpHeight [
+    ifelse [pcolor] of patch-ahead -1 = blue
+    [
+      bk 1
+      set jumpHeight jumpHeight + 1
+      if jumpHeight >= maxJumpHeight
+      [
+        set jumping? false
+        set jumpHeight 0
+      ]
+    ]
+    [
       set jumping? false
       set jumpHeight 0
     ]
@@ -277,7 +285,7 @@ BUTTON
 181
 51
 go
-go\n;DEBUG\nask workers with [color = red]\n[\nprint xcor\nprint ycor\n]
+go
 T
 1
 T
