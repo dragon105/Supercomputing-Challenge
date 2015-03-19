@@ -115,6 +115,7 @@ to workersGo
         [ ;; mark ACTUAL baseLocation red
            goBck
            set baseWidth baseWidth + 1
+           ask patch-ahead 1 [ set pcolor black ]
            if [pcolor] of patch (xcor - 1) ycor = brown or [pcolor] of patch (xcor - 1) (ycor - 1) = blue [
              if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor red ] ] ; mark
              ask patches with [pcolor = yellow] [ set pcolor brown ]
@@ -176,6 +177,9 @@ to workersGo
   ]
   ;; bot collision
   if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue] ] ]
+  
+  ;; digestion
+  if digestion? and (random 100) < digestionFrequency and color = lime [ set color gray ]
 end
 
 to fall
@@ -186,11 +190,18 @@ to fall
     ifelse ([pcolor] of patch-ahead 1 = blue) and ((not any? turtles-on patch-ahead 1) or (color = red)) and (not jumping?) [ fd 1 ] [ set fallheight 0 ]
   ]
   [ ;; update jump
-    ifelse [pcolor] of patch-ahead -1 = blue
+    ifelse ycor < max-pycor
     [
-      bk 1
-      set jumpHeight jumpHeight + 1
-      if jumpHeight >= maxJumpHeight
+      ifelse [pcolor] of patch-ahead -1 = blue
+      [
+        bk 1
+        set jumpHeight jumpHeight + 1
+        if jumpHeight >= maxJumpHeight
+        [
+          set jumping? false
+          set jumpHeight 0
+        ]
+      ]
       [
         set jumping? false
         set jumpHeight 0
@@ -274,7 +285,7 @@ INPUTBOX
 209
 112
 startingWorkers
-50
+150
 1
 0
 Number
@@ -313,7 +324,7 @@ INPUTBOX
 209
 363
 maxJumpHeight
-8
+10
 1
 0
 Number
@@ -346,7 +357,7 @@ INPUTBOX
 209
 546
 maxHillSize
-40
+60
 1
 0
 Number
@@ -380,6 +391,28 @@ INPUTBOX
 241
 terrainBrushSize
 15
+1
+0
+Number
+
+SWITCH
+54
+547
+165
+580
+digestion?
+digestion?
+0
+1
+-1000
+
+INPUTBOX
+166
+547
+321
+607
+digestionFrequency
+50
 1
 0
 Number
