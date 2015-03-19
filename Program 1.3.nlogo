@@ -266,7 +266,7 @@ INPUTBOX
 209
 112
 startingWorkers
-25
+50
 1
 0
 Number
