@@ -115,10 +115,10 @@ to workersGo
         [ ;; mark ACTUAL baseLocation red
            goBck
            set baseWidth baseWidth + 1
-           ask patch-ahead 1 [ set pcolor black ]
+           ask patch-ahead 1 [ set pcolor green ]
            if [pcolor] of patch (xcor - 1) ycor = brown or [pcolor] of patch (xcor - 1) (ycor - 1) = blue [
-             if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor red ] ] ; mark
-             ask patches with [pcolor = yellow] [ set pcolor brown ]
+             ask patch-ahead 1 [ set pcolor red ]; mark
+             ask patches with [pcolor = yellow] [ set pcolor green ]
              set baseHeight ycor
              set color gray
            ]
