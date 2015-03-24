@@ -13,6 +13,7 @@ globals
   terrainFlatLengthLocal
   terrainFlatLengthGlobal
   baseWidth
+  debug
 ]
 
 breed [workers worker] ;; workers that build
@@ -31,7 +32,7 @@ splats-own[life]
 to setup
   clear-all
   reset-ticks
-  
+  set debug 0
   set-default-shape workers "superputingRobot"
   set-default-shape splats "circle"
   
@@ -77,7 +78,7 @@ end
 to workersGo
   fall
   ifelse  baseLocationChosen? = True
-  [
+[
     ;; if base location is unmarked, have turtle 0 mark it before construction
     ifelse any? patches with [pcolor = red]
     [ ;;;; construct base
@@ -100,7 +101,8 @@ to workersGo
             if [pcolor] of patch (xcor + i) ycor = brown [ set topOfHill? false]
             set i i + 1
           ]
-          if topOfHill? [ grab patch-ahead 1 ]
+          if topOfHill? [
+             grab patch-ahead 1]
         ]
       ]
       [ ;;;; build resources into base
@@ -146,11 +148,11 @@ to workersGo
     [
       ;; if  on flat land, increment terrainFlatLength
       set terrainFlatLengthLocal terrainFlatLengthLocal + 1      
-      
       ;; go forward and jump over obstacles
       ; make sure to map every patch: only go forward if on ground or jumping onto ground
       if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown and [pcolor] of patch (xcor + 1) ycor = blue[
         goFwd
+        
         if jumping? [ set jumping? false ]
       ]
       ; map terrain underneath bots stacked underneath
@@ -176,7 +178,7 @@ to workersGo
     ]
   ]
   ;; bot collision
-  if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue] ] ]
+  if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue]] ]
   
   ;; digestion
   if digestion? and (random 100) < digestionFrequency and color = lime [ set color gray ]
@@ -346,7 +348,7 @@ INPUTBOX
 209
 485
 percentHills
-2
+3
 1
 0
 Number
@@ -357,7 +359,7 @@ INPUTBOX
 209
 546
 maxHillSize
-60
+45
 1
 0
 Number
@@ -416,6 +418,17 @@ digestionFrequency
 1
 0
 Number
+
+SWITCH
+1246
+40
+1355
+73
+debugger
+debugger
+1
+1
+-1000
 
 @#$#@#$#@
 ## Team Members
