@@ -104,10 +104,6 @@ to workersGo
           if topOfHill? [
              grab patch-ahead 1]
         ]
-        print "turtles"
-        show count turtles 
-        print "ticks/movement"
-        show ticks
       ]
       [ ;;;; build resources into base
         
@@ -375,7 +371,7 @@ SWITCH
 180
 terrainPainting?
 terrainPainting?
-0
+1
 1
 -1000
 
