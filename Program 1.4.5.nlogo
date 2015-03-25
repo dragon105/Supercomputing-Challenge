@@ -392,7 +392,7 @@ INPUTBOX
 209
 241
 terrainBrushSize
-15
+0
 1
 0
 Number
