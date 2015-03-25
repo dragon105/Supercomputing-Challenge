@@ -104,6 +104,10 @@ to workersGo
           if topOfHill? [
              grab patch-ahead 1]
         ]
+        print "turtles"
+        show count turtles 
+        print "ticks/movement"
+        show ticks
       ]
       [ ;;;; build resources into base
         
