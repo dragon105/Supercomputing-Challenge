@@ -49,7 +49,7 @@ to setup
     if (random 100) < percentHills
      [
        set pcolor brown
-       ask patches in-radius random maxHillSize [set pcolor brown]
+       ask patches in-radius random maxHillSize [ set pcolor brown ]
      ]
   ]
   
@@ -57,7 +57,10 @@ end
 
 
 to go
-  if workersGo? [ ask workers [ workersGo ] ]
+  ;; first, have a turtle map terrain and place base markers.
+  if not baseLocationChosen? [ ask turtle 0 [ get-baseLocation ] ] ;; set baseLocation global variable in flattest area
+  
+  ;; terrain paint if mouse is down and terrain painting switch is on
   if terrainPainting? [ if mouse-Down? [ ask patch mouse-xcor mouse-ycor [ ask patches in-radius terrainBrushSize [ if pcolor = blue [ set pcolor brown ] ] ] ] ]
   tick
 end
@@ -84,7 +87,8 @@ to workersGo
     [ ;;;; construct base
       ifelse color = gray
       [ ;;;; gather resources if not carrying any
-        if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown or [pcolor] of patch-ahead 1 = red or [pcolor] of patch (xcor + 1) (ycor - 1) = red or any? turtles-on patch-ahead 1 and [pcolor] of patch (xcor + 1) ycor = blue or [pcolor] of patch-ahead 1 = green or [pcolor] of patch (xcor + 1) (ycor + 1) = green
+        ; move onto available location
+        if ([pcolor] of patch-ahead 1 != blue or any? turtles-on patch-ahead 1) or ([pcolor] of patch (xcor + 1) (ycor - 1) != blue or any? turtles-on patch (xcor + 1) (ycor - 1) ) 
        [
           goFwd
           if jumping? [ set jumping? false ]
@@ -92,6 +96,7 @@ to workersGo
         
         if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
         ;; only take from tops of hills
+        ; only take brown patches
         if ycor > terrainBaseDepth + 1 and [pcolor] of patch-ahead 1 = brown
         [
           let i 0
@@ -143,40 +148,7 @@ to workersGo
       ]
     ]
   ]
-  [ ;;;; pick base location
-    if color = red
-    [
-      ;; if  on flat land, increment terrainFlatLength
-      set terrainFlatLengthLocal terrainFlatLengthLocal + 1      
-      ;; go forward and jump over obstacles
-      ; make sure to map every patch: only go forward if on ground or jumping onto ground
-      if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown and [pcolor] of patch (xcor + 1) ycor = blue[
-        goFwd
-        
-        if jumping? [ set jumping? false ]
-      ]
-      ; map terrain underneath bots stacked underneath
-      if any? turtles-on patch-ahead 1 [
-        fd 1
-        ask turtles-on patch-ahead 1 [ bk 1 ]
-      ]
-      
-      if [pcolor] of patch (xcor + 1) ycor = brown or [pcolor] of patch-ahead 1 = blue[
-        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
-        
-        ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
-        if terrainFlatLengthLocal > terrainFlatLengthGlobal
-        [
-          set terrainFlatLengthGlobal terrainFlatLengthLocal
-          ifelse [pcolor] of patch-ahead 1 = blue [ set baseLocation (xcor - 1) ] [ set baseLocation xcor ]
-        ]
-        ; since terrain is no longer flat, reset counter for length of local flat.
-        set terrainFlatLengthLocal 0
-      ]
-      ;; set base location once entire terrain has ben mapped.
-      if xcor = spawnLocation - 1 [ set baseLocationChosen? true ]
-    ]
-  ]
+  []
   ;; bot collision
   if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue]] ]
   
@@ -184,6 +156,10 @@ to workersGo
   if digestion? and (random 100) < digestionFrequency and color = lime [ set color gray ]
 end
 
+
+;;;; procedures for workers
+
+;; movement basics
 to fall
   ;; fall if above ground and  not jumping
   ifelse not jumping?
@@ -216,7 +192,6 @@ to fall
   ]
 end
 
-;; procedures for workers
 to hop
   if [pcolor] of patch-ahead 1 = brown or any? turtles-on patch-ahead 1 [
     set jumping? true
@@ -228,13 +203,64 @@ to goFwd
   if [pcolor] of patch (xcor + 1) ycor = blue [ setxy (xcor + 1) ycor ]
 end
 
+
+
 to goBck
-  if [pcolor] of patch (xcor - 1) ycor = blue [ setxy (xcor - 1) ycor ] 
+  if [pcolor] of patch (xcor - 1) ycor = blue [ setxy (xcor - 1) ycor ]
 end
 
 to grab [ target ]
   ask target [ set pcolor blue ]
   set color lime
+end
+
+;; procedurally related
+to get-baseLocation
+ ;;;; pick base location
+  if color = red
+  [
+    ;; if  on flat land, increment terrainFlatLength
+    set terrainFlatLengthLocal terrainFlatLengthLocal + 1      
+    ;; go forward and jump over obstacles
+    ; make sure to map every patch: only go forward if on ground or jumping onto ground
+    if [pcolor] of patch-ahead 1 = brown or [pcolor] of patch (xcor + 1) (ycor - 1) = brown and [pcolor] of patch (xcor + 1) ycor = blue[
+      goFwd
+      
+      if jumping? [ set jumping? false ]
+    ]
+    ; map terrain underneath bots stacked underneath
+    if any? turtles-on patch-ahead 1 [
+      fd 1
+      ask turtles-on patch-ahead 1 [ bk 1 ]
+    ]
+    
+    if [pcolor] of patch (xcor + 1) ycor = brown or [pcolor] of patch-ahead 1 = blue[
+      if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
+      
+      ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
+      if terrainFlatLengthLocal > terrainFlatLengthGlobal
+      [
+        set terrainFlatLengthGlobal terrainFlatLengthLocal
+        ifelse [pcolor] of patch-ahead 1 = blue [ set baseLocation (xcor - 1) ] [ set baseLocation xcor ]
+      ]
+      ; since terrain is no longer flat, reset counter for length of local flat.
+      set terrainFlatLengthLocal 0
+    ]
+    ;; set base location once entire terrain has ben mapped.
+    if xcor = spawnLocation - 1 [ set baseLocationChosen? true ]
+  ]
+end
+
+to markBase
+  
+end
+
+to gather
+  
+end
+
+to build
+  
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -404,7 +430,7 @@ SWITCH
 580
 digestion?
 digestion?
-0
+1
 1
 -1000
 
