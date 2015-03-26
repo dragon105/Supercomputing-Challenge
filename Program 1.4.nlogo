@@ -14,6 +14,7 @@ globals
   terrainFlatLengthGlobal
   baseWidth
   debug
+  redpatch
 ]
 
 breed [workers worker] ;; workers that build
@@ -80,7 +81,7 @@ to workersGo
   ifelse  baseLocationChosen? = True
 [
     ;; if base location is unmarked, have turtle 0 mark it before construction
-    ifelse any? patches with [pcolor = red]
+    ifelse redpatch = true
     [ ;;;; construct base
       ifelse color = gray
       [ ;;;; gather resources if not carrying any
@@ -120,6 +121,7 @@ to workersGo
            ask patch-ahead 1 [ set pcolor green ]
            if [pcolor] of patch (xcor - 1) ycor = brown or [pcolor] of patch (xcor - 1) (ycor - 1) = blue [
              ask patch-ahead 1 [ set pcolor red ]; mark
+             set redpatch true
              ask patches with [pcolor = yellow] [ set pcolor green ]
              set baseHeight ycor
              set color gray
@@ -348,7 +350,7 @@ INPUTBOX
 209
 485
 percentHills
-3
+8
 1
 0
 Number
