@@ -36,7 +36,7 @@ nex+Gen Academy
 107 
 
 **Team Members:**
-Xavier Rivera, Kyle Morris, Jonathan Schlaegel, Jenna Soherr
+Xavier Rivera, Kyle Morris, Jenna Soherr
 
 **Teacher:**
 Michael Steele
