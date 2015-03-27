@@ -14,6 +14,7 @@ globals
   terrainFlatLengthGlobal
   baseWidth
   debug
+  readyToBuild?
 ]
 
 breed [workers worker] ;; workers that build
@@ -32,6 +33,8 @@ splats-own[life]
 to setup
   clear-all
   reset-ticks
+  set readyToBuild? false
+  set baseLocationChosen? false
   set debug 0
   set-default-shape workers "superputingRobot"
   set-default-shape splats "circle"
@@ -47,18 +50,35 @@ to setup
   ask patches with [pycor = terrainBaseDepth ]
   [
     if (random 100) < percentHills
-     [
-       set pcolor brown
-       ask patches in-radius random maxHillSize [ set pcolor brown ]
-     ]
+      [
+        set pcolor brown
+        ask patches in-radius random maxHillSize [ set pcolor brown ]
+      ]
   ]
   
 end
 
 
 to go
-  ;; first, have a turtle map terrain and place base markers.
-  if not baseLocationChosen? [ ask turtle 0 [ get-baseLocation ] ] ;; set baseLocation global variable in flattest area
+  ;; if base is marked to construct, build. Otherwise, mark base
+  ifelse readyToBuild?
+  [
+    ask turtles
+    [ ;; gather resources and construct base
+      ifelse color = gray [ gather ][ build ] 
+    ] 
+  ]
+  [
+    ;; have a turtle map terrain and place base markers.
+    ifelse not baseLocationChosen? [ ask turtle 0 [ get-baseLocation ] ] ;; set baseLocation global variable in flattest area
+    [ ask turtle 0 [ markBase ] ] ;; mark location
+  ]
+  
+  ;; misc
+  ask turtles [
+    fall
+    if digestion? [ ask turtles with [color = lime] [ if (random 100) < digestionFrequency [ set color gray ] ] ]
+  ]
   
   ;; terrain paint if mouse is down and terrain painting switch is on
   if terrainPainting? [ if mouse-Down? [ ask patch mouse-xcor mouse-ycor [ ask patches in-radius terrainBrushSize [ if pcolor = blue [ set pcolor brown ] ] ] ] ]
@@ -77,85 +97,6 @@ to spawnWorkers [ n x y ]
     setxy x y
   ]
 end
-
-to workersGo
-  fall
-  ifelse  baseLocationChosen? = True
-[
-    ;; if base location is unmarked, have turtle 0 mark it before construction
-    ifelse any? patches with [pcolor = red]
-    [ ;;;; construct base
-      ifelse color = gray
-      [ ;;;; gather resources if not carrying any
-        ; move onto available location
-        if ([pcolor] of patch-ahead 1 != blue or any? turtles-on patch-ahead 1) or ([pcolor] of patch (xcor + 1) (ycor - 1) != blue or any? turtles-on patch (xcor + 1) (ycor - 1) ) 
-       [
-          goFwd
-          if jumping? [ set jumping? false ]
-        ]
-        
-        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
-        ;; only take from tops of hills
-        ; only take brown patches
-        if ycor > terrainBaseDepth + 1 and [pcolor] of patch-ahead 1 = brown
-        [
-          let i 0
-          let topOfhill? true
-          while [ [pcolor] of patch (xcor + i) (ycor - 1) = brown and i <= maxHillSize ]
-          [
-            if [pcolor] of patch (xcor + i) ycor = brown [ set topOfHill? false]
-            set i i + 1
-          ]
-          if topOfHill? [
-             grab patch-ahead 1]
-        ]
-      ]
-      [ ;;;; build resources into base
-        
-      ]
-    ]
-    [
-      ;; mark base for construction if unmarked
-      if color = red
-      [
-        ifelse any? patches with [pcolor = yellow]
-        [ ;; mark ACTUAL baseLocation red
-           goBck
-           set baseWidth baseWidth + 1
-           ask patch-ahead 1 [ set pcolor green ]
-           if [pcolor] of patch (xcor - 1) ycor = brown or [pcolor] of patch (xcor - 1) (ycor - 1) = blue [
-             ask patch-ahead 1 [ set pcolor red ]; mark
-             ask patches with [pcolor = yellow] [ set pcolor green ]
-             set baseHeight ycor
-             set color gray
-           ]
-        ]
-        [ ;; mark original recorded baseLocation yellow
-          ifelse xcor < baseLocation
-          [
-            goFwd
-            if [pcolor] of patch (xcor + 1) ycor = brown and xcor != baseLocation[ hop ]
-          ]
-          [
-            ifelse xcor > baseLocation
-            [
-              goBck
-              if [pcolor] of patch (xcor - 1) ycor = brown [ hop ]
-            ]
-            [ if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor yellow ] ] ]
-          ]
-        ]
-      ]
-    ]
-  ]
-  []
-  ;; bot collision
-  if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue]] ]
-  
-  ;; digestion
-  if digestion? and (random 100) < digestionFrequency and color = lime [ set color gray ]
-end
-
 
 ;;;; procedures for workers
 
@@ -216,7 +157,7 @@ end
 
 ;; procedurally related
 to get-baseLocation
- ;;;; pick base location
+  ;;;; pick base location
   if color = red
   [
     ;; if  on flat land, increment terrainFlatLength
@@ -252,11 +193,59 @@ to get-baseLocation
 end
 
 to markBase
-  
+  ifelse any? patches with [pcolor = yellow]
+  [ ;; mark ACTUAL baseLocation red
+    goBck
+    set baseWidth baseWidth + 1
+    ask patch-ahead 1 [ set pcolor green ]
+    if [pcolor] of patch (xcor - 1) ycor = brown or [pcolor] of patch (xcor - 1) (ycor - 1) = blue [
+      ask patch-ahead 1 [ set pcolor red ]; mark
+      set readyToBuild? True
+      ask patches with [pcolor = yellow] [ set pcolor green ]
+      set baseHeight ycor
+      set color gray
+    ]
+  ]
+  [ ;; mark original recorded baseLocation yellow
+    ifelse xcor < baseLocation
+    [
+      goFwd
+      if [pcolor] of patch (xcor + 1) ycor = brown and xcor != baseLocation[ hop ]
+    ]
+    [
+      ifelse xcor > baseLocation
+      [
+        goBck
+        if [pcolor] of patch (xcor - 1) ycor = brown [ hop ]
+      ]
+      [ if [pcolor] of patch-ahead 1 = brown [ ask patch-ahead 1 [ set pcolor yellow ] ] ]
+    ]
+  ]
 end
 
 to gather
+  ;;;; gather resources if not carrying any
+  ; move onto available location
+  if ([pcolor] of patch-ahead 1 != blue or any? turtles-on patch-ahead 1) or ([pcolor] of patch (xcor + 1) (ycor - 1) != blue or any? turtles-on patch (xcor + 1) (ycor - 1) ) 
+    [
+      goFwd
+      if jumping? [ set jumping? false ]
+    ]
   
+  if ([pcolor] of patch (xcor + 1) ycor) = brown [ hop ]
+  ;; only take from tops of hills
+  ; only take brown patches
+  if ycor > terrainBaseDepth + 1 and [pcolor] of patch-ahead 1 = brown
+    [
+      let i 0
+      let topOfhill? true
+      while [ [pcolor] of patch (xcor + i) (ycor - 1) = brown and i <= maxHillSize ]
+        [
+          if [pcolor] of patch (xcor + i) ycor = brown [ set topOfHill? false]
+          set i i + 1
+        ]
+      if topOfHill? [ grab patch-ahead 1 ]
+    ]
 end
 
 to build
@@ -313,7 +302,7 @@ INPUTBOX
 209
 112
 startingWorkers
-15
+800
 1
 0
 Number
@@ -363,7 +352,7 @@ INPUTBOX
 209
 424
 spawnHeight
-85
+100
 1
 0
 Number
@@ -374,7 +363,7 @@ INPUTBOX
 209
 485
 percentHills
-3
+5
 1
 0
 Number
@@ -385,7 +374,7 @@ INPUTBOX
 209
 546
 maxHillSize
-45
+65
 1
 0
 Number
@@ -430,7 +419,7 @@ SWITCH
 580
 digestion?
 digestion?
-1
+0
 1
 -1000
 
@@ -440,7 +429,7 @@ INPUTBOX
 321
 607
 digestionFrequency
-50
+3
 1
 0
 Number
