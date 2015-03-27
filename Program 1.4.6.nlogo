@@ -164,7 +164,9 @@ to workersGo
       ]
       
       if [pcolor] of patch (xcor + 1) ycor = brown or [pcolor] of patch-ahead 1 = blue[
-        if [pcolor] of patch (xcor + 1) ycor = brown [ hop ]
+        if [pcolor] of patch (xcor + 1) ycor = brown [ hop
+          print debug
+          set debug (debug + 1) ]
         
         ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
         if terrainFlatLengthLocal > terrainFlatLengthGlobal
@@ -289,7 +291,7 @@ INPUTBOX
 209
 112
 startingWorkers
-15
+100
 1
 0
 Number
@@ -350,7 +352,7 @@ INPUTBOX
 209
 485
 percentHills
-3
+1
 1
 0
 Number
@@ -361,7 +363,7 @@ INPUTBOX
 209
 546
 maxHillSize
-45
+65
 1
 0
 Number
@@ -373,7 +375,7 @@ SWITCH
 180
 terrainPainting?
 terrainPainting?
-1
+0
 1
 -1000
 
