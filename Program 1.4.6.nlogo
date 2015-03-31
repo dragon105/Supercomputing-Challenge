@@ -163,10 +163,12 @@ to workersGo
         ask turtles-on patch-ahead 1 [ bk 1 ]
       ]
       
+      while [[pcolor] of patch-here = brown] [move-to patch-at 0 1]
       if [pcolor] of patch (xcor + 1) ycor = brown or [pcolor] of patch-ahead 1 = blue[
         if [pcolor] of patch (xcor + 1) ycor = brown [ hop
-          print debug
-          set debug (debug + 1) ]
+;          print debug
+;          set debug (debug + 1) 
+]
         
         ; if length of local flat is longer than global flat, local flat becomes new global. Additionally, location of new global flat is stored
         if terrainFlatLengthLocal > terrainFlatLengthGlobal
@@ -182,8 +184,11 @@ to workersGo
     ]
   ]
   ;; bot collision
-  if color != red [ ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue]] ]
-  
+  if color = grey[
+   ifelse [pcolor] of patch-here != brown [
+     ask other turtles-here with [color != red] [ move-to one-of neighbors with [pcolor = blue]]]
+   [ move-to patch-at 0 1 ]
+  ]
   ;; digestion
   if digestion? and (random 100) < digestionFrequency and color = lime [ set color gray ]
 end
@@ -341,7 +346,7 @@ INPUTBOX
 209
 424
 spawnHeight
-85
+65
 1
 0
 Number
@@ -396,7 +401,7 @@ INPUTBOX
 209
 241
 terrainBrushSize
-0
+5
 1
 0
 Number
